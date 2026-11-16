@@ -1,0 +1,30 @@
+{{{
+  exports({ to: app.configPath('central_bridge.ts') })
+}}}
+import env from '#start/env'
+import { defineConfig, stores } from '@central/bridge-adonis'
+
+/**
+ * Bridge da Central: API administrativa assinada em /central-api/v1.
+ * Contrato: docs/central/bridge-contract.md
+ */
+const centralBridgeConfig = defineConfig({
+  enabled: env.get('CENTRAL_BRIDGE_ENABLED', false),
+  token: env.get('CENTRAL_BRIDGE_TOKEN', ''),
+  product: env.get('CENTRAL_BRIDGE_PRODUCT', ''),
+  allowedIps: env.get('CENTRAL_BRIDGE_ALLOWED_IPS', ''),
+
+  /**
+   * Em memória só serve para UMA instância. Com mais de uma instância use
+   * Redis (@adonisjs/redis): stores.redis()
+   */
+  idempotencyStore: stores.memory(),
+
+  /**
+   * Carregado sob demanda para que models e services só sejam importados
+   * depois do boot da aplicação.
+   */
+  handlers: () => import('#services/central_bridge_handlers'),
+})
+
+export default centralBridgeConfig

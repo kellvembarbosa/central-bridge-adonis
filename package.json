@@ -1,0 +1,67 @@
+{
+  "name": "@central/bridge-adonis",
+  "version": "1.0.0",
+  "description": "Bridge da Central para apps AdonisJS 7: API administrativa assinada (HMAC) e cliente da API de faturação.",
+  "type": "module",
+  "license": "MIT",
+  "main": "./build/index.js",
+  "types": "./build/index.d.ts",
+  "files": [
+    "build",
+    "!build/tests",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./build/index.d.ts",
+      "import": "./build/index.js"
+    },
+    "./provider": {
+      "types": "./build/providers/central_bridge_provider.d.ts",
+      "import": "./build/providers/central_bridge_provider.js"
+    },
+    "./core": {
+      "types": "./build/src/core/main.d.ts",
+      "import": "./build/src/core/main.js"
+    },
+    "./client": {
+      "types": "./build/src/client.d.ts",
+      "import": "./build/src/client.js"
+    },
+    "./types": {
+      "types": "./build/src/types.d.ts",
+      "import": "./build/src/types.js"
+    }
+  },
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "scripts": {
+    "clean": "node -e \"require('node:fs').rmSync('build',{recursive:true,force:true})\"",
+    "build": "npm run clean && tsc -p tsconfig.build.json && node -e \"require('node:fs').cpSync('stubs','build/stubs',{recursive:true,filter:(s)=>!s.endsWith('.ts')})\"",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test --test-reporter=spec tests/*.spec.ts",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build",
+    "prepare": "npm run build"
+  },
+  "peerDependencies": {
+    "@adonisjs/core": "^7.0.0",
+    "@adonisjs/redis": ">=10.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@adonisjs/redis": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@adonisjs/assembler": "^8.4.0",
+    "@adonisjs/core": "^7.3.3",
+    "@types/node": "~25.6.0",
+    "typescript": "~6.0.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kellvembarbosa/central-bridge-adonis.git"
+  }
+}

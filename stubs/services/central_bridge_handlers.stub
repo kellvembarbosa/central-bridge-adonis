@@ -1,0 +1,20 @@
+{{{
+  exports({ to: app.makePath('app/services/central_bridge_handlers.ts') })
+}}}
+import type { BridgeHandlers } from '@central/bridge-adonis'
+
+/**
+ * Implemente só o que o produto oferece. Handler ausente responde 501
+ * (capability_unsupported) e não aparece no /health.
+ *
+ * Usuário inexistente: lance UserNotFoundError (ou devolva null em findUser).
+ */
+const handlers: BridgeHandlers = {
+  // async findUser(ref) {
+  //   const user = await User.find(ref)
+  //   if (!user) return null
+  //   return { ref: String(user.id), email: user.email, ... }
+  // },
+}
+
+export default handlers
