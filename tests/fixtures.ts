@@ -107,5 +107,8 @@ export function fakeHandlers(calls: Calls = {}): BridgeHandlers {
     async receiveInvoice(delivery: InvoiceDelivery, actor: string) {
       record('receiveInvoice', [delivery, actor])
     },
+    async paymentEvent(event, actor) {
+      record('paymentEvent', [event, actor])
+    },
   }
 }

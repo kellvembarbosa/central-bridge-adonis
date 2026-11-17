@@ -1,4 +1,5 @@
 import type { IdempotencyStore } from './core/idempotency.ts'
+import type { PaymentEvent } from './checkout.ts'
 
 /**
  * Data shapes of the Bridge contract (§7). camelCase in TypeScript; the
@@ -136,6 +137,13 @@ export interface BridgeHandlers {
   invoiceRequest?(provider: string, paymentId: string): MaybePromise<InvoiceRequest>
   /** Must be idempotent by `delivery.invoiceId`. */
   receiveInvoice?(delivery: InvoiceDelivery, actor: string): MaybePromise<void>
+  /**
+   * Payment notification of the Central checkout (§10): grant on
+   * `payment.paid`, revoke on `payment.refunded`, extend on
+   * `subscription.renewed`… Must be idempotent by `event.id` (and grant once
+   * per `event.payment.id`). Throwing makes the Central retry later.
+   */
+  paymentEvent?(event: PaymentEvent, actor: string): MaybePromise<void>
 }
 
 /**
@@ -193,6 +201,7 @@ export const CAPABILITIES = [
   'suspend',
   'metrics',
   'invoices',
+  'payment_events',
 ] as const
 
 export type Capability = (typeof CAPABILITIES)[number]

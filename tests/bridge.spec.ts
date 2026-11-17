@@ -6,6 +6,7 @@ import { sign } from '../src/core/signature.ts'
 import { MemoryIdempotencyStore, idempotencyFingerprint } from '../src/core/idempotency.ts'
 import { RedisIdempotencyStore, type RedisLike } from '../src/redis_store.ts'
 import type { BridgeRequest } from '../src/types.ts'
+import { BRIDGE_VERSION } from '../src/version.ts'
 
 const TOKEN = 'tok'
 const NOW = 1_763_200_000
@@ -65,7 +66,7 @@ describe('defineConfig', () => {
     assert.equal(config.maxSkewSeconds, 300)
     assert.equal(config.idempotencyTtlHours, 24)
     assert.equal(config.perPage, 25)
-    assert.equal(config.version, '1.0.0')
+    assert.equal(config.version, BRIDGE_VERSION)
     assert.ok(config.idempotencyStore instanceof MemoryIdempotencyStore)
     assert.deepEqual(defineConfig(config), config)
   })
@@ -80,7 +81,7 @@ describe('CentralBridge (framework-free)', () => {
     const ok = await bridge.dispatch('health', request('GET', '/central-api/v1/health'))
     assert.deepEqual(ok, {
       status: 200,
-      body: { version: '1.0.0', product: 'p', capabilities: [] },
+      body: { version: BRIDGE_VERSION, product: 'p', capabilities: [] },
       headers: {},
     })
     const bad = await bridge.dispatch('health', {

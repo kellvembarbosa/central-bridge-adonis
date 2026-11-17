@@ -3,6 +3,7 @@ import assert from 'node:assert/strict'
 import { ACTOR, deferred, startBridgeServer, TOKEN, type TestServer } from './helpers.ts'
 import { fakeHandlers, type Calls } from './fixtures.ts'
 import { BRIDGE_ERRORS, IDEMPOTENCY_IN_PROGRESS_MESSAGE } from '../src/core/errors.ts'
+import { BRIDGE_VERSION } from '../src/version.ts'
 
 const P = '/central-api/v1'
 
@@ -163,6 +164,7 @@ describe('health and capabilities', () => {
           'suspend',
           'metrics',
           'invoices',
+          'payment_events',
         ],
       })
     } finally {
@@ -182,7 +184,7 @@ describe('health and capabilities', () => {
     try {
       const res = await s.call('GET', `${P}/health`)
       assert.deepEqual(res.body, {
-        version: '1.0.0',
+        version: BRIDGE_VERSION,
         product: 'demo',
         capabilities: ['user_detail'],
       })
@@ -227,6 +229,7 @@ describe('501 capability_unsupported', () => {
     [`${P}/users/u1/suspend`, { reason: 'x' }],
     [`${P}/users/u1/unsuspend`, { reason: 'x' }],
     [`${P}/invoices`, { invoice_id: 'i1' }],
+    [`${P}/payment-events`, { id: 'evt_1' }],
   ]
   for (const [path, body] of writes) {
     it(`POST ${path}`, async () => assertError(await s.write(path, body), 'capability_unsupported'))

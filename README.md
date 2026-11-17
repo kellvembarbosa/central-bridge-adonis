@@ -2,7 +2,7 @@
 
 Bridge da Central para apps **AdonisJS 7**: a API de administração assinada
 (HMAC) que cada produto expõe em `/central-api/v1` para a Central consultar e
-agir, mais o **cliente da API de faturação** (produto → Central).
+agir, mais o **cliente da API da Central** (faturação e checkout, produto → Central).
 
 Implementa o contrato `docs/central/bridge-contract.md` (v1). O pacote gêmeo
 para Laravel (`applu/central-bridge`, [kellvembarbosa/central-bridge-laravel](https://github.com/kellvembarbosa/central-bridge-laravel))
@@ -20,7 +20,7 @@ O pacote é público no GitHub ([kellvembarbosa/central-bridge-adonis](https://g
 e é instalado direto do repositório, por tag:
 
 ```bash
-npm install github:kellvembarbosa/central-bridge-adonis#v1.0.0
+npm install github:kellvembarbosa/central-bridge-adonis#v1.1.0
 node ace configure @central/bridge-adonis
 ```
 
@@ -126,6 +126,7 @@ carregados depois do boot.
 | `suspend`              | `suspend(ref, reason, actor)` **e** `unsuspend(ref, reason, actor)`           | `POST users/{ref}/suspend` / `unsuspend`                         |
 | `metrics`              | `metrics(from, to)`                                                           | `GET metrics?from=YYYY-MM-DD&to=YYYY-MM-DD`                      |
 | `invoices`             | `invoiceRequest(provider, paymentId)` **e** `receiveInvoice(delivery, actor)` | `GET payments/{provider}/{id}/invoice-request` / `POST invoices` |
+| `payment_events`       | `paymentEvent(event, actor)` (checkout, ver abaixo)                           | `POST payment-events`                                            |
 
 - Os tipos usam camelCase (`userRef`, `hasMore`, `currentPeriodEnd`...); o
   pacote converte para snake_case no fio e converte o corpo recebido
@@ -138,6 +139,7 @@ carregados depois do boot.
 - Outra recusa de regra de negócio: `throw new BridgeError('validation_failed', 'Plano inexistente.')`.
 - Qualquer outra exceção vira 500 `internal_error` sem detalhe na resposta (o erro vai para o `logger` do app).
 - `receiveInvoice` precisa ser idempotente por `delivery.invoiceId`.
+- `paymentEvent` precisa ser idempotente por `event.id` (e conceder no máximo uma vez por `event.payment.id`).
 
 ```ts
 // app/services/central_bridge_handlers.ts
@@ -258,8 +260,72 @@ try {
 }
 ```
 
-As respostas JSON da Central são devolvidas como chegaram (formato documentado
+As respostas JSON da faturação são devolvidas como chegaram (formato documentado
 em `/api/docs` da Central).
+
+## Checkout pela Central (§10)
+
+A Central é dona do checkout e dos pagamentos: planos, preços e chaves de
+gateway ficam lá (painel → produto → **Checkout e planos**). O produto **não
+guarda chave de gateway**; só escolhe o slug do plano e reage às notificações
+assinadas da Central. Mesmo `CentralClient` da seção anterior:
+
+```ts
+// 1. Página de preços: planos à venda, já ordenados.
+const plans = await central.listPlans() // GET /api/v1/plans
+// [{ slug, name, description, interval: 'day'|'week'|'month'|'year'|'lifetime',
+//    intervalCount, recurring, amountCents, originalAmountCents, currency, badge,
+//    features, sortOrder }]
+
+// 2. Checkout: a Central cria a cobrança (Pix na Woovi, cartão/boleto no Asaas…).
+const payment = await central.createPayment(
+  {
+    plan: 'vitalicio',
+    customer: { name, email, document }, // document opcional (alguns gateways exigem)
+    productUserRef: String(user.id),
+    method: 'pix', // ou 'card' | 'boleto' | null (padrão do gateway / página hospedada)
+    tracking: { utm_source },
+  },
+  `checkout:${user.id}:${attemptId}` // X-Idempotency-Key: chave nova a cada tentativa
+) // POST /api/v1/payments
+// payment.pix?.copyPaste / payment.pix?.qrCodeImageUrl / payment.checkoutUrl
+
+// 3. Página de retorno/polling: pagamentos pendentes são reconsultados no gateway.
+const current = await central.getPayment(payment.id) // GET /api/v1/payments/{id}
+// status: pending | paid | expired | refunded | failed
+```
+
+Os três métodos devolvem objetos em camelCase (`Plan`, `PaymentRecord`); erros
+da Central (ex.: `plan_unavailable`) chegam como `CentralApiError`.
+
+Depois implemente o handler `paymentEvent`: a Central chama
+`POST /central-api/v1/payment-events` (assinado, com `X-Central-Actor` e
+`X-Idempotency-Key`, e reenviado até receber 2xx):
+
+```ts
+// app/services/central_bridge_handlers.ts
+const handlers: BridgeHandlers = {
+  async paymentEvent(event) {
+    switch (event.type) {
+      case 'payment.paid': // concede event.payment.plan a event.payment.productUserRef
+        return grantOnce(event.payment.id, event.payment)
+      case 'payment.refunded': // estorno total ou chargeback: revoga
+        return revoke(event.payment.id)
+      case 'subscription.renewed': // estende até event.subscription.currentPeriodEnd
+        return extend(event.payment.id, event.subscription!.currentPeriodEnd)
+      case 'subscription.ended': // cancelada/expirada: não renova mais
+      case 'payment.expired':
+        return markEnded(event.payment.id, event.type)
+    }
+  },
+}
+```
+
+Trate **de forma idempotente por `event.id`** e conceda no máximo uma vez por
+`payment.id`: a mesma notificação pode chegar mais de uma vez, e o produto pode
+ver `status: 'paid'` pelo `getPayment` antes. Lançar exceção faz a Central
+tentar de novo depois. Com mais de uma instância, use o `idempotencyStore`
+compartilhado (`stores.redis()`).
 
 ## Uso fora do AdonisJS / núcleo puro
 

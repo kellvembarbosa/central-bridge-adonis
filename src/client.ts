@@ -1,9 +1,17 @@
 import { randomUUID } from 'node:crypto'
 import { sign } from './core/signature.ts'
+import {
+  createPaymentToWire,
+  parsePaymentRecord,
+  parsePlan,
+  type CreatePaymentInput,
+  type PaymentRecord,
+  type Plan,
+} from './checkout.ts'
 
 /**
- * Client for the Central invoicing API (§9): product → Central, signed with
- * the same token and scheme as the Bridge plus `X-Central-Product`.
+ * Client for the Central API — invoicing (§9) and checkout (§10): product →
+ * Central, signed with the same token and scheme as the Bridge plus `X-Central-Product`.
  */
 
 export interface IssueInvoiceInput {
@@ -117,6 +125,31 @@ export class CentralClient {
       'json',
       { idempotencyKey, body: { reason } }
     )
+  }
+
+  /** GET /api/v1/plans — plans on sale, in display order (§10). */
+  async listPlans(): Promise<Plan[]> {
+    const body = await this.#request('GET', '/api/v1/plans', 'json')
+    return (Array.isArray(body?.data) ? body.data : []).map(parsePlan)
+  }
+
+  /**
+   * POST /api/v1/payments — the Central creates the charge with its own
+   * gateway keys. Same key + same input returns the same payment; use a new
+   * key for a new attempt (e.g. after `status: "failed"`).
+   */
+  async createPayment(input: CreatePaymentInput, idempotencyKey: string): Promise<PaymentRecord> {
+    const body = await this.#request('POST', '/api/v1/payments', 'json', {
+      idempotencyKey,
+      body: createPaymentToWire(input),
+    })
+    return parsePaymentRecord(body?.data)
+  }
+
+  /** GET /api/v1/payments/{id} — current status (pending ones are re-checked at the gateway). */
+  async getPayment(id: string): Promise<PaymentRecord> {
+    const body = await this.#request('GET', `/api/v1/payments/${encodeURIComponent(id)}`, 'json')
+    return parsePaymentRecord(body?.data)
   }
 
   async #request(
