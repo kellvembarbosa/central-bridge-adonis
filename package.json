@@ -1,6 +1,6 @@
 {
   "name": "@central/bridge-adonis",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Bridge da Central para apps AdonisJS 7: API administrativa assinada (HMAC) e cliente da API da Central (faturação e checkout).",
   "type": "module",
   "license": "MIT",

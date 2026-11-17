@@ -20,7 +20,7 @@ O pacote é público no GitHub ([kellvembarbosa/central-bridge-adonis](https://g
 e é instalado direto do repositório, por tag:
 
 ```bash
-npm install github:kellvembarbosa/central-bridge-adonis#v1.1.0
+npm install github:kellvembarbosa/central-bridge-adonis#v1.2.0
 node ace configure @central/bridge-adonis
 ```
 
@@ -307,19 +307,25 @@ Depois implemente o handler `paymentEvent`: a Central chama
 const handlers: BridgeHandlers = {
   async paymentEvent(event) {
     switch (event.type) {
-      case 'payment.paid': // concede event.payment.plan a event.payment.productUserRef
-        return grantOnce(event.payment.id, event.payment)
+      case 'payment.paid':
+      case 'subscription.renewed': // acesso ao plan.slug até accessUntil (null = para sempre)
+        return setAccess(event.payment.productUserRef, event.payment.plan.slug, event.payment.accessUntil)
       case 'payment.refunded': // estorno total ou chargeback: revoga
-        return revoke(event.payment.id)
-      case 'subscription.renewed': // estende até event.subscription.currentPeriodEnd
-        return extend(event.payment.id, event.subscription!.currentPeriodEnd)
-      case 'subscription.ended': // cancelada/expirada: não renova mais
-      case 'payment.expired':
-        return markEnded(event.payment.id, event.type)
+        return revoke(event.payment.productUserRef, event.payment.id)
+      case 'subscription.ended': // o gateway não cobra mais; o acesso segue até accessUntil
+      case 'payment.expired': // a cobrança pendente venceu sem pagamento
+        return
     }
   },
 }
 ```
+
+`payment.accessUntil` é até quando o pagamento (e suas renovações) dá acesso;
+`null` = vitalício (ou ainda não pago). Quem calcula é a Central: o produto
+nunca faz conta de data. `event.subscription` (`{ status, currentPeriodEnd }`)
+vem em todo plano pago que tem período (recorrente ou pré-pago avulso) e é
+`null` só em plano vitalício e em cobrança nunca paga;
+`subscription.currentPeriodEnd` é igual a `payment.accessUntil`.
 
 Trate **de forma idempotente por `event.id`** e conceda no máximo uma vez por
 `payment.id`: a mesma notificação pode chegar mais de uma vez, e o produto pode
