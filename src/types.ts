@@ -1,5 +1,5 @@
 import type { IdempotencyStore } from './core/idempotency.ts'
-import type { PaymentEvent } from './checkout.ts'
+import type { PaymentEvent, PaymentNotice } from './checkout.ts'
 
 /**
  * Data shapes of the Bridge contract (§7). camelCase in TypeScript; the
@@ -147,6 +147,13 @@ export interface BridgeHandlers {
    * Throwing makes the Central retry later.
    */
   paymentEvent?(event: PaymentEvent, actor: string): MaybePromise<void>
+  /**
+   * "Message this buyer now" (§10.7): the Pix right after the charge and
+   * recovery reminders while it is unpaid. Send `notice.message` (already
+   * rendered from the product's templates) to `notice.payment.customer.email`
+   * through your own channel. Never changes access. Idempotent by `notice.id`.
+   */
+  paymentNotice?(notice: PaymentNotice, actor: string): MaybePromise<void>
 }
 
 /**
@@ -205,6 +212,7 @@ export const CAPABILITIES = [
   'metrics',
   'invoices',
   'payment_events',
+  'payment_notices',
 ] as const
 
 export type Capability = (typeof CAPABILITIES)[number]

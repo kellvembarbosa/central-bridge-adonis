@@ -20,7 +20,7 @@ O pacote é público no GitHub ([kellvembarbosa/central-bridge-adonis](https://g
 e é instalado direto do repositório, por tag:
 
 ```bash
-npm install github:kellvembarbosa/central-bridge-adonis#v1.2.0
+npm install github:kellvembarbosa/central-bridge-adonis#v1.3.0
 node ace configure @central/bridge-adonis
 ```
 
@@ -127,6 +127,7 @@ carregados depois do boot.
 | `metrics`              | `metrics(from, to)`                                                           | `GET metrics?from=YYYY-MM-DD&to=YYYY-MM-DD`                      |
 | `invoices`             | `invoiceRequest(provider, paymentId)` **e** `receiveInvoice(delivery, actor)` | `GET payments/{provider}/{id}/invoice-request` / `POST invoices` |
 | `payment_events`       | `paymentEvent(event, actor)` (checkout, ver abaixo)                           | `POST payment-events`                                            |
+| `payment_notices`      | `paymentNotice(notice, actor)` (Pix e recuperação, ver abaixo)                | `POST payment-notices`                                           |
 
 - Os tipos usam camelCase (`userRef`, `hasMore`, `currentPeriodEnd`...); o
   pacote converte para snake_case no fio e converte o corpo recebido
@@ -309,7 +310,11 @@ const handlers: BridgeHandlers = {
     switch (event.type) {
       case 'payment.paid':
       case 'subscription.renewed': // acesso ao plan.slug até accessUntil (null = para sempre)
-        return setAccess(event.payment.productUserRef, event.payment.plan.slug, event.payment.accessUntil)
+        return setAccess(
+          event.payment.productUserRef,
+          event.payment.plan.slug,
+          event.payment.accessUntil
+        )
       case 'payment.refunded': // estorno total ou chargeback: revoga
         return revoke(event.payment.productUserRef, event.payment.id)
       case 'subscription.ended': // o gateway não cobra mais; o acesso segue até accessUntil
@@ -332,6 +337,31 @@ Trate **de forma idempotente por `event.id`** e conceda no máximo uma vez por
 ver `status: 'paid'` pelo `getPayment` antes. Lançar exceção faz a Central
 tentar de novo depois. Com mais de uma instância, use o `idempotencyStore`
 compartilhado (`stores.redis()`).
+
+### Pix e recuperação de cobrança (`paymentNotice`, desde 1.3.0)
+
+A Central pode pedir ao produto que mande mensagem ao comprador: o Pix logo
+após criar a cobrança (`payment.created`, step 0) e lembretes de recuperação
+enquanto ela segue sem pagamento (`payment.reminder`, step 1..n), e o recibo quando pago (`payment.confirmed`). Vale quando o produto escolhe o canal **Bridge**; no canal **e-mail** a própria Central envia. Assunto e
+texto chegam **já montados** pelos modelos da Central (Produto → Checkout →
+"Pix e recuperação de cobrança", curingas como `{{first_name}}`,
+`{{pix_code}}`, `{{payment_url}}`). O produto só entrega, pelo canal dele:
+
+```ts
+async paymentNotice(notice) {
+  await mail.send((m) =>
+    m
+      .to(notice.payment.customer.email)
+      .subject(notice.message.subject)
+      .text(notice.message.text)
+  )
+  // opcional: notice.payment.pix?.qrCodeImageUrl / notice.payment.checkoutUrl
+}
+```
+
+A Central só envia enquanto a cobrança está pendente e é a mais recente do
+comprador; não mexa no acesso aqui. Idempotente por `notice.id`; lançar erro
+faz a Central tentar de novo algumas vezes.
 
 ## Uso fora do AdonisJS / núcleo puro
 

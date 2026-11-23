@@ -110,5 +110,8 @@ export function fakeHandlers(calls: Calls = {}): BridgeHandlers {
     async paymentEvent(event, actor) {
       record('paymentEvent', [event, actor])
     },
+    async paymentNotice(notice, actor) {
+      record('paymentNotice', [notice, actor])
+    },
   }
 }

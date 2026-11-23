@@ -100,6 +100,38 @@ export interface PaymentEvent {
   subscription: { status: string; currentPeriodEnd: string | null } | null
 }
 
+export const PAYMENT_NOTICE_TYPES = [
+  'payment.created',
+  'payment.reminder',
+  'payment.confirmed',
+] as const
+
+export type PaymentNoticeType = (typeof PAYMENT_NOTICE_TYPES)[number]
+
+/**
+ * What the Central sends to `POST payment-notices` (§10.7) when the product
+ * chose the Bridge channel: "message this buyer now". The Central already rendered `message` from the product's
+ * templates (placeholders filled); send it through your own channel
+ * (e-mail, push, WhatsApp…) to `payment.customer.email`, using
+ * `payment.pix` / `payment.checkoutUrl` for a QR code or button if you like.
+ *
+ * - `payment.created` (step 0): right after the charge was created.
+ * - `payment.reminder` (step 1..n): recovery while the charge is unpaid.
+ * - `payment.confirmed` (step 0): receipt once paid (access is still granted
+ *   by `paymentEvent`, not here).
+ *
+ * Never grant or revoke access here. Must be idempotent by `id` (it may
+ * arrive more than once). Throwing makes the Central retry a few times.
+ */
+export interface PaymentNotice {
+  id: string
+  type: PaymentNoticeType
+  step: number
+  occurredAt: string
+  payment: PaymentRecord
+  message: { subject: string; text: string }
+}
+
 export interface CreatePaymentInput {
   /** Plan slug (from listPlans). The price comes from the Central. */
   plan: string
@@ -262,6 +294,26 @@ export function parsePaymentEvent(body: Record<string, unknown>): PaymentEvent {
           currentPeriodEnd: strOrNull(sub, 'current_period_end', 'subscription.'),
         }
       : null,
+  }
+}
+
+/** Parses the `POST payment-notices` body. Throws ValidationFailedError (422). */
+export function parsePaymentNotice(body: Record<string, unknown>): PaymentNotice {
+  const type = str(body, 'type', '')
+  if (!(PAYMENT_NOTICE_TYPES as readonly string[]).includes(type)) invalid('type')
+  const step = int(body, 'step', '')
+  if (step < 0) invalid('step')
+  const message = obj(body.message, 'message')
+  return {
+    id: str(body, 'id', ''),
+    type: type as PaymentNoticeType,
+    step,
+    occurredAt: str(body, 'occurred_at', ''),
+    payment: parsePaymentRecord(body.payment),
+    message: {
+      subject: str(message, 'subject', 'message.'),
+      text: str(message, 'text', 'message.'),
+    },
   }
 }
 

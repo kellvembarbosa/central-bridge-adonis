@@ -28,7 +28,7 @@ import {
   userDetailToWire,
   userSummaryToWire,
 } from './serializers.ts'
-import { parsePaymentEvent } from './checkout.ts'
+import { parsePaymentEvent, parsePaymentNotice } from './checkout.ts'
 import {
   SUBSCRIPTION_STATUSES,
   type BridgeHandlers,
@@ -55,6 +55,7 @@ export type BridgeRouteName =
   | 'unsuspend'
   | 'receiveInvoice'
   | 'paymentEvent'
+  | 'paymentNotice'
 
 export interface BridgeRouteDefinition {
   name: BridgeRouteName
@@ -82,6 +83,7 @@ export const BRIDGE_ROUTES: readonly BridgeRouteDefinition[] = [
   { name: 'unsuspend', method: 'POST', pattern: 'users/:ref/unsuspend' },
   { name: 'receiveInvoice', method: 'POST', pattern: 'invoices' },
   { name: 'paymentEvent', method: 'POST', pattern: 'payment-events' },
+  { name: 'paymentNotice', method: 'POST', pattern: 'payment-notices' },
 ]
 
 const ROUTES_BY_NAME = new Map(BRIDGE_ROUTES.map((route) => [route.name, route]))
@@ -215,6 +217,7 @@ export class CentralBridge {
     if (h.metrics) list.push('metrics')
     if (h.invoiceRequest && h.receiveInvoice) list.push('invoices')
     if (h.paymentEvent) list.push('payment_events')
+    if (h.paymentNotice) list.push('payment_notices')
     return list
   }
 
@@ -400,6 +403,12 @@ export class CentralBridge {
       case 'paymentEvent': {
         if (!h.paymentEvent) throw new BridgeError('capability_unsupported')
         await h.paymentEvent(parsePaymentEvent(parseJsonObject(request.rawBody)), actor)
+        return { ok: true }
+      }
+
+      case 'paymentNotice': {
+        if (!h.paymentNotice) throw new BridgeError('capability_unsupported')
+        await h.paymentNotice(parsePaymentNotice(parseJsonObject(request.rawBody)), actor)
         return { ok: true }
       }
     }

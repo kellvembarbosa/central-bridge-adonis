@@ -4,9 +4,11 @@ import { existsSync, readFileSync } from 'node:fs'
 import { CentralClient } from '../src/client.ts'
 import {
   parsePaymentEvent,
+  parsePaymentNotice,
   parsePaymentRecord,
   parsePlan,
   type PaymentEvent,
+  type PaymentNotice,
 } from '../src/checkout.ts'
 import { ValidationFailedError } from '../src/core/errors.ts'
 import { verifySignature } from '../src/core/signature.ts'
@@ -33,6 +35,11 @@ const vectors = JSON.parse(readFileSync(vectorsFile('payment_event.json'), 'utf8
   prepaid_wire: Record<string, unknown>
   prepaid_parsed: unknown
   invalid_events: { why: string; wire: Record<string, unknown> }[]
+  notice_wire: Record<string, unknown>
+  notice_parsed: unknown
+  reminder_wire: Record<string, unknown>
+  reminder_parsed: unknown
+  invalid_notices: { why: string; wire: Record<string, unknown> }[]
 }
 
 describe('checkout vectors (bridge-test-vectors/payment_event.json)', () => {
@@ -55,6 +62,53 @@ describe('checkout vectors (bridge-test-vectors/payment_event.json)', () => {
       assert.throws(() => parsePaymentEvent(bad.wire), ValidationFailedError)
     })
   }
+})
+
+describe('POST payment-notices (Central → product, §10.7)', () => {
+  const received: { notice: PaymentNotice; actor: string }[] = []
+  let s: TestServer
+  before(
+    async () =>
+      (s = await startBridgeServer({
+        handlers: {
+          paymentNotice: (notice, actor) => {
+            received.push({ notice, actor })
+          },
+        },
+      }))
+  )
+  after(() => s.close())
+
+  it('notice vectors parse to the camelCase shapes', () => {
+    assert.deepEqual(parsePaymentNotice(vectors.notice_wire), vectors.notice_parsed)
+    assert.deepEqual(parsePaymentNotice(vectors.reminder_wire), vectors.reminder_parsed)
+  })
+
+  for (const bad of vectors.invalid_notices) {
+    it(`rejects notice: ${bad.why}`, () => {
+      assert.throws(() => parsePaymentNotice(bad.wire), ValidationFailedError)
+    })
+  }
+
+  it('delivers the parsed notice with the actor; announces payment_notices', async () => {
+    const res = await s.write(`${P}/payment-notices`, vectors.notice_wire, 'ntc-key')
+    assert.equal(res.status, 200)
+    assert.deepEqual(res.body, { ok: true })
+    assert.deepEqual(received, [{ notice: vectors.notice_parsed, actor: ACTOR }])
+
+    const again = await s.write(`${P}/payment-notices`, vectors.notice_wire, 'ntc-key')
+    assert.equal(again.headers.get('x-idempotency-replayed'), 'true')
+    assert.equal(received.length, 1)
+
+    const health = await s.call('GET', `${P}/health`)
+    assert.deepEqual(health.body.capabilities, ['payment_notices'])
+  })
+
+  it('422 on an invalid notice', async () => {
+    const bad = await s.write(`${P}/payment-notices`, vectors.invalid_notices[0].wire, 'n-bad')
+    assert.equal(bad.status, 422)
+    assert.equal(bad.body.error.code, 'validation_failed')
+  })
 })
 
 describe('POST payment-events (Central → product)', () => {

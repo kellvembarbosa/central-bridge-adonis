@@ -40,6 +40,7 @@ describe('CentralBridgeProvider', () => {
       'POST /central-api/v1/users/:ref/unsuspend',
       'POST /central-api/v1/invoices',
       'POST /central-api/v1/payment-events',
+      'POST /central-api/v1/payment-notices',
     ]) {
       assert.ok(routes.includes(expected), `${expected} in ${routes.join(', ')}`)
     }

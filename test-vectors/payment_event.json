@@ -1,5 +1,5 @@
 {
-  "description": "Central checkout shapes (contract §10). Packages must parse *_wire into *_parsed exactly (snake_case wire → camelCase).",
+  "description": "Central checkout shapes (contract §10). Packages must parse *_wire into *_parsed exactly (snake_case wire → camelCase). notice_* are payment notices (§10.7, POST payment-notices).",
   "plan_wire": {
     "slug": "30-dias",
     "name": "30 dias",
@@ -11,9 +11,7 @@
     "original_amount_cents": 1990,
     "currency": "BRL",
     "badge": "Liberação imediata",
-    "features": [
-      "Simulado ilimitado"
-    ],
+    "features": ["Simulado ilimitado"],
     "sort_order": 1
   },
   "plan_parsed": {
@@ -27,9 +25,7 @@
     "originalAmountCents": 1990,
     "currency": "BRL",
     "badge": "Liberação imediata",
-    "features": [
-      "Simulado ilimitado"
-    ],
+    "features": ["Simulado ilimitado"],
     "sortOrder": 1
   },
   "payment_wire": {
@@ -413,6 +409,415 @@
           "expires_at": "2026-11-18T12:00:00.000+00:00"
         },
         "subscription": null
+      }
+    }
+  ],
+  "notice_wire": {
+    "id": "ntc_0123456789abcdef0123456789abcdef",
+    "type": "payment.created",
+    "step": 0,
+    "occurred_at": "2026-11-17T12:00:01.000+00:00",
+    "payment": {
+      "id": "7f6d3c1e-4b2a-4c8e-9f10-2a3b4c5d6e7f",
+      "status": "pending",
+      "plan": {
+        "slug": "vitalicio",
+        "name": "Acesso Vitalício",
+        "interval": "lifetime",
+        "interval_count": 1,
+        "recurring": false
+      },
+      "amount_cents": 2990,
+      "refunded_cents": 0,
+      "currency": "BRL",
+      "method": "pix",
+      "product_user_ref": "42",
+      "customer": {
+        "name": "Ana Souza",
+        "email": "ana@cliente.test"
+      },
+      "pix": {
+        "copy_paste": "00020101021226...6304ABCD",
+        "qr_code_image_url": "https://api.woovi.com/openpix/charge/brcode/image/x.png",
+        "expires_at": "2026-11-18T12:00:00.000+00:00"
+      },
+      "checkout_url": "https://woovi.com/pay/x",
+      "tracking": {
+        "utm_source": "google"
+      },
+      "access_until": null,
+      "created_at": "2026-11-17T12:00:00.000+00:00",
+      "paid_at": null,
+      "refunded_at": null,
+      "expires_at": "2026-11-18T12:00:00.000+00:00"
+    },
+    "message": {
+      "subject": "Seu Pix de R$ 29,90 para Simulados",
+      "text": "Olá, Ana!\n\nPix copia e cola:\n00020101021226...6304ABCD\n\nLink: https://woovi.com/pay/x"
+    }
+  },
+  "notice_parsed": {
+    "id": "ntc_0123456789abcdef0123456789abcdef",
+    "type": "payment.created",
+    "step": 0,
+    "occurredAt": "2026-11-17T12:00:01.000+00:00",
+    "payment": {
+      "id": "7f6d3c1e-4b2a-4c8e-9f10-2a3b4c5d6e7f",
+      "status": "pending",
+      "plan": {
+        "slug": "vitalicio",
+        "name": "Acesso Vitalício",
+        "interval": "lifetime",
+        "intervalCount": 1,
+        "recurring": false
+      },
+      "amountCents": 2990,
+      "refundedCents": 0,
+      "currency": "BRL",
+      "method": "pix",
+      "productUserRef": "42",
+      "customer": {
+        "name": "Ana Souza",
+        "email": "ana@cliente.test"
+      },
+      "pix": {
+        "copyPaste": "00020101021226...6304ABCD",
+        "qrCodeImageUrl": "https://api.woovi.com/openpix/charge/brcode/image/x.png",
+        "expiresAt": "2026-11-18T12:00:00.000+00:00"
+      },
+      "checkoutUrl": "https://woovi.com/pay/x",
+      "tracking": {
+        "utm_source": "google"
+      },
+      "accessUntil": null,
+      "createdAt": "2026-11-17T12:00:00.000+00:00",
+      "paidAt": null,
+      "refundedAt": null,
+      "expiresAt": "2026-11-18T12:00:00.000+00:00"
+    },
+    "message": {
+      "subject": "Seu Pix de R$ 29,90 para Simulados",
+      "text": "Olá, Ana!\n\nPix copia e cola:\n00020101021226...6304ABCD\n\nLink: https://woovi.com/pay/x"
+    }
+  },
+  "reminder_wire": {
+    "id": "ntc_fedcba9876543210fedcba9876543210",
+    "type": "payment.reminder",
+    "step": 2,
+    "occurred_at": "2026-11-18T08:00:00.000+00:00",
+    "payment": {
+      "id": "7f6d3c1e-4b2a-4c8e-9f10-2a3b4c5d6e7f",
+      "status": "pending",
+      "plan": {
+        "slug": "vitalicio",
+        "name": "Acesso Vitalício",
+        "interval": "lifetime",
+        "interval_count": 1,
+        "recurring": false
+      },
+      "amount_cents": 2990,
+      "refunded_cents": 0,
+      "currency": "BRL",
+      "method": "pix",
+      "product_user_ref": "42",
+      "customer": {
+        "name": "Ana Souza",
+        "email": "ana@cliente.test"
+      },
+      "pix": {
+        "copy_paste": "00020101021226...6304ABCD",
+        "qr_code_image_url": "https://api.woovi.com/openpix/charge/brcode/image/x.png",
+        "expires_at": "2026-11-18T12:00:00.000+00:00"
+      },
+      "checkout_url": "https://woovi.com/pay/x",
+      "tracking": {
+        "utm_source": "google"
+      },
+      "access_until": null,
+      "created_at": "2026-11-17T12:00:00.000+00:00",
+      "paid_at": null,
+      "refunded_at": null,
+      "expires_at": "2026-11-18T12:00:00.000+00:00"
+    },
+    "message": {
+      "subject": "Ana, seu Pix vence em breve",
+      "text": "O Pix de R$ 29,90 vence em 18/11/2026 09:00."
+    }
+  },
+  "reminder_parsed": {
+    "id": "ntc_fedcba9876543210fedcba9876543210",
+    "type": "payment.reminder",
+    "step": 2,
+    "occurredAt": "2026-11-18T08:00:00.000+00:00",
+    "payment": {
+      "id": "7f6d3c1e-4b2a-4c8e-9f10-2a3b4c5d6e7f",
+      "status": "pending",
+      "plan": {
+        "slug": "vitalicio",
+        "name": "Acesso Vitalício",
+        "interval": "lifetime",
+        "intervalCount": 1,
+        "recurring": false
+      },
+      "amountCents": 2990,
+      "refundedCents": 0,
+      "currency": "BRL",
+      "method": "pix",
+      "productUserRef": "42",
+      "customer": {
+        "name": "Ana Souza",
+        "email": "ana@cliente.test"
+      },
+      "pix": {
+        "copyPaste": "00020101021226...6304ABCD",
+        "qrCodeImageUrl": "https://api.woovi.com/openpix/charge/brcode/image/x.png",
+        "expiresAt": "2026-11-18T12:00:00.000+00:00"
+      },
+      "checkoutUrl": "https://woovi.com/pay/x",
+      "tracking": {
+        "utm_source": "google"
+      },
+      "accessUntil": null,
+      "createdAt": "2026-11-17T12:00:00.000+00:00",
+      "paidAt": null,
+      "refundedAt": null,
+      "expiresAt": "2026-11-18T12:00:00.000+00:00"
+    },
+    "message": {
+      "subject": "Ana, seu Pix vence em breve",
+      "text": "O Pix de R$ 29,90 vence em 18/11/2026 09:00."
+    }
+  },
+  "invalid_notices": [
+    {
+      "why": "unknown type",
+      "wire": {
+        "id": "ntc_0123456789abcdef0123456789abcdef",
+        "type": "payment.paid",
+        "step": 0,
+        "occurred_at": "2026-11-17T12:00:01.000+00:00",
+        "payment": {
+          "id": "7f6d3c1e-4b2a-4c8e-9f10-2a3b4c5d6e7f",
+          "status": "pending",
+          "plan": {
+            "slug": "vitalicio",
+            "name": "Acesso Vitalício",
+            "interval": "lifetime",
+            "interval_count": 1,
+            "recurring": false
+          },
+          "amount_cents": 2990,
+          "refunded_cents": 0,
+          "currency": "BRL",
+          "method": "pix",
+          "product_user_ref": "42",
+          "customer": {
+            "name": "Ana Souza",
+            "email": "ana@cliente.test"
+          },
+          "pix": {
+            "copy_paste": "00020101021226...6304ABCD",
+            "qr_code_image_url": "https://api.woovi.com/openpix/charge/brcode/image/x.png",
+            "expires_at": "2026-11-18T12:00:00.000+00:00"
+          },
+          "checkout_url": "https://woovi.com/pay/x",
+          "tracking": {
+            "utm_source": "google"
+          },
+          "access_until": null,
+          "created_at": "2026-11-17T12:00:00.000+00:00",
+          "paid_at": null,
+          "refunded_at": null,
+          "expires_at": "2026-11-18T12:00:00.000+00:00"
+        },
+        "message": {
+          "subject": "Seu Pix de R$ 29,90 para Simulados",
+          "text": "Olá, Ana!\n\nPix copia e cola:\n00020101021226...6304ABCD\n\nLink: https://woovi.com/pay/x"
+        }
+      }
+    },
+    {
+      "why": "step is not an integer",
+      "wire": {
+        "id": "ntc_0123456789abcdef0123456789abcdef",
+        "type": "payment.created",
+        "step": "1",
+        "occurred_at": "2026-11-17T12:00:01.000+00:00",
+        "payment": {
+          "id": "7f6d3c1e-4b2a-4c8e-9f10-2a3b4c5d6e7f",
+          "status": "pending",
+          "plan": {
+            "slug": "vitalicio",
+            "name": "Acesso Vitalício",
+            "interval": "lifetime",
+            "interval_count": 1,
+            "recurring": false
+          },
+          "amount_cents": 2990,
+          "refunded_cents": 0,
+          "currency": "BRL",
+          "method": "pix",
+          "product_user_ref": "42",
+          "customer": {
+            "name": "Ana Souza",
+            "email": "ana@cliente.test"
+          },
+          "pix": {
+            "copy_paste": "00020101021226...6304ABCD",
+            "qr_code_image_url": "https://api.woovi.com/openpix/charge/brcode/image/x.png",
+            "expires_at": "2026-11-18T12:00:00.000+00:00"
+          },
+          "checkout_url": "https://woovi.com/pay/x",
+          "tracking": {
+            "utm_source": "google"
+          },
+          "access_until": null,
+          "created_at": "2026-11-17T12:00:00.000+00:00",
+          "paid_at": null,
+          "refunded_at": null,
+          "expires_at": "2026-11-18T12:00:00.000+00:00"
+        },
+        "message": {
+          "subject": "Seu Pix de R$ 29,90 para Simulados",
+          "text": "Olá, Ana!\n\nPix copia e cola:\n00020101021226...6304ABCD\n\nLink: https://woovi.com/pay/x"
+        }
+      }
+    },
+    {
+      "why": "negative step",
+      "wire": {
+        "id": "ntc_0123456789abcdef0123456789abcdef",
+        "type": "payment.created",
+        "step": -1,
+        "occurred_at": "2026-11-17T12:00:01.000+00:00",
+        "payment": {
+          "id": "7f6d3c1e-4b2a-4c8e-9f10-2a3b4c5d6e7f",
+          "status": "pending",
+          "plan": {
+            "slug": "vitalicio",
+            "name": "Acesso Vitalício",
+            "interval": "lifetime",
+            "interval_count": 1,
+            "recurring": false
+          },
+          "amount_cents": 2990,
+          "refunded_cents": 0,
+          "currency": "BRL",
+          "method": "pix",
+          "product_user_ref": "42",
+          "customer": {
+            "name": "Ana Souza",
+            "email": "ana@cliente.test"
+          },
+          "pix": {
+            "copy_paste": "00020101021226...6304ABCD",
+            "qr_code_image_url": "https://api.woovi.com/openpix/charge/brcode/image/x.png",
+            "expires_at": "2026-11-18T12:00:00.000+00:00"
+          },
+          "checkout_url": "https://woovi.com/pay/x",
+          "tracking": {
+            "utm_source": "google"
+          },
+          "access_until": null,
+          "created_at": "2026-11-17T12:00:00.000+00:00",
+          "paid_at": null,
+          "refunded_at": null,
+          "expires_at": "2026-11-18T12:00:00.000+00:00"
+        },
+        "message": {
+          "subject": "Seu Pix de R$ 29,90 para Simulados",
+          "text": "Olá, Ana!\n\nPix copia e cola:\n00020101021226...6304ABCD\n\nLink: https://woovi.com/pay/x"
+        }
+      }
+    },
+    {
+      "why": "message missing",
+      "wire": {
+        "id": "ntc_0123456789abcdef0123456789abcdef",
+        "type": "payment.created",
+        "step": 0,
+        "occurred_at": "2026-11-17T12:00:01.000+00:00",
+        "payment": {
+          "id": "7f6d3c1e-4b2a-4c8e-9f10-2a3b4c5d6e7f",
+          "status": "pending",
+          "plan": {
+            "slug": "vitalicio",
+            "name": "Acesso Vitalício",
+            "interval": "lifetime",
+            "interval_count": 1,
+            "recurring": false
+          },
+          "amount_cents": 2990,
+          "refunded_cents": 0,
+          "currency": "BRL",
+          "method": "pix",
+          "product_user_ref": "42",
+          "customer": {
+            "name": "Ana Souza",
+            "email": "ana@cliente.test"
+          },
+          "pix": {
+            "copy_paste": "00020101021226...6304ABCD",
+            "qr_code_image_url": "https://api.woovi.com/openpix/charge/brcode/image/x.png",
+            "expires_at": "2026-11-18T12:00:00.000+00:00"
+          },
+          "checkout_url": "https://woovi.com/pay/x",
+          "tracking": {
+            "utm_source": "google"
+          },
+          "access_until": null,
+          "created_at": "2026-11-17T12:00:00.000+00:00",
+          "paid_at": null,
+          "refunded_at": null,
+          "expires_at": "2026-11-18T12:00:00.000+00:00"
+        }
+      }
+    },
+    {
+      "why": "message.text empty",
+      "wire": {
+        "id": "ntc_0123456789abcdef0123456789abcdef",
+        "type": "payment.created",
+        "step": 0,
+        "occurred_at": "2026-11-17T12:00:01.000+00:00",
+        "payment": {
+          "id": "7f6d3c1e-4b2a-4c8e-9f10-2a3b4c5d6e7f",
+          "status": "pending",
+          "plan": {
+            "slug": "vitalicio",
+            "name": "Acesso Vitalício",
+            "interval": "lifetime",
+            "interval_count": 1,
+            "recurring": false
+          },
+          "amount_cents": 2990,
+          "refunded_cents": 0,
+          "currency": "BRL",
+          "method": "pix",
+          "product_user_ref": "42",
+          "customer": {
+            "name": "Ana Souza",
+            "email": "ana@cliente.test"
+          },
+          "pix": {
+            "copy_paste": "00020101021226...6304ABCD",
+            "qr_code_image_url": "https://api.woovi.com/openpix/charge/brcode/image/x.png",
+            "expires_at": "2026-11-18T12:00:00.000+00:00"
+          },
+          "checkout_url": "https://woovi.com/pay/x",
+          "tracking": {
+            "utm_source": "google"
+          },
+          "access_until": null,
+          "created_at": "2026-11-17T12:00:00.000+00:00",
+          "paid_at": null,
+          "refunded_at": null,
+          "expires_at": "2026-11-18T12:00:00.000+00:00"
+        },
+        "message": {
+          "subject": "Oi",
+          "text": ""
+        }
       }
     }
   ]

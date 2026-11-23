@@ -165,6 +165,7 @@ describe('health and capabilities', () => {
           'metrics',
           'invoices',
           'payment_events',
+          'payment_notices',
         ],
       })
     } finally {
@@ -230,6 +231,7 @@ describe('501 capability_unsupported', () => {
     [`${P}/users/u1/unsuspend`, { reason: 'x' }],
     [`${P}/invoices`, { invoice_id: 'i1' }],
     [`${P}/payment-events`, { id: 'evt_1' }],
+    [`${P}/payment-notices`, { id: 'ntc_1' }],
   ]
   for (const [path, body] of writes) {
     it(`POST ${path}`, async () => assertError(await s.write(path, body), 'capability_unsupported'))
